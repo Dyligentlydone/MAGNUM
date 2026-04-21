@@ -1,6 +1,7 @@
 import GlobalSearch from '@/components/global-search';
 import AppointmentCalendar from '@/components/appointment-calendar';
 import ServiceStats from '@/components/service-stats';
+import RecentActiveRepairOrders from '@/components/recent-active-repair-orders';
 
 export default function HomePage() {
   return (
@@ -44,6 +45,9 @@ export default function HomePage() {
 
       {/* Service Statistics */}
       <ServiceStats />
+
+      {/* Top 10 recent active repair orders */}
+      <RecentActiveRepairOrders />
 
       {/* Appointment Calendar */}
       <div className="mt-8">
