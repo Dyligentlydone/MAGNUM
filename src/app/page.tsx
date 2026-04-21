@@ -42,16 +42,12 @@ export default function HomePage() {
         </a>
       </div>
 
-      {/* Appointment Calendar */}
-      <div className="mt-8">
-        <AppointmentCalendar />
-      </div>
-
       {/* Service Statistics */}
       <ServiceStats />
 
-      <div className="mt-auto pb-6 text-center text-4xl font-semibold text-slate-800">
-        "Lets Keep Having Fun"
+      {/* Appointment Calendar */}
+      <div className="mt-8">
+        <AppointmentCalendar />
       </div>
     </div>
   );
