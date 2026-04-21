@@ -4,7 +4,6 @@ import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 
-import logo from '../../magnum x dyligent.png';
 import GlobalSearch from '@/components/global-search';
 
 type NavItem = {
@@ -42,8 +41,10 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           <div className="flex items-center justify-between gap-2 px-4 py-4">
             <a className="flex items-center" href="/">
               <Image
-                src={logo}
-                alt="Magnum"
+                src="/LOGO.png"
+                alt="Magnum Auto Repair"
+                width={1388}
+                height={711}
                 priority
                 className={collapsed ? 'h-8 w-auto' : 'h-9 w-auto'}
               />
