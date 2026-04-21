@@ -41,7 +41,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           <div className="flex items-center justify-between gap-2 px-4 py-4">
             <a className="flex items-center" href="/">
               <Image
-                src="/LOGO.png"
+                src="/logo.png"
                 alt="Magnum Auto Repair"
                 width={1388}
                 height={711}
