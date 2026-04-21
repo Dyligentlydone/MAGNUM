@@ -43,11 +43,11 @@ export default function HomePage() {
         </a>
       </div>
 
-      {/* Service Statistics */}
-      <ServiceStats />
-
       {/* Top 10 recent active repair orders */}
       <RecentActiveRepairOrders />
+
+      {/* Service Statistics */}
+      <ServiceStats />
 
       {/* Appointment Calendar */}
       <div className="mt-8">
