@@ -38,8 +38,8 @@ Copy `.env.local.example` → `.env.local` and fill in:
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Project Settings → API → `anon` public key | ✅ |
 | `SUPABASE_SERVICE_ROLE_KEY` | Project Settings → API → `service_role` secret key | ✅ |
 | `AUTH_SECRET` | Generate: `openssl rand -base64 48` | ✅ |
-| `AUTH_PASSWORD` | Plain password used at `/login` (check `src/app/api/auth` for exact env name) | ✅ |
-| `NEXTAUTH_URL` / `NEXT_PUBLIC_APP_URL` | e.g. `http://localhost:3000` for dev, prod domain for prod | ✅ |
+| `OWNER_APP_PIN` | 4-digit PIN (regex `^\d{4}$`) used at `/login` | ✅ |
+| `NEXT_PUBLIC_APP_URL` | e.g. `http://localhost:3000` for dev, prod domain for prod | ✅ |
 | `VOICEFLOW_AGENT_KEY` | Any shared secret; only needed if `/api/agent/*` is re-enabled | ❌ |
 | Twilio (`TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER`) | Twilio Console | only if SMS used |
 
@@ -105,8 +105,8 @@ WHERE key = 'tax';
 2. Update `SUPABASE_SERVICE_ROLE_KEY` in `.env.local` and in the production host (Railway/Vercel).
 3. Redeploy.
 
-### Rotate the login password
-Change `AUTH_PASSWORD` (check `src/app/api/auth` for the exact variable name) in `.env.local` and in prod. Re-deploy.
+### Rotate the login PIN
+Change `OWNER_APP_PIN` in `.env.local` and in prod. Re-deploy. Existing session cookies remain valid until they expire (30 days) unless you also rotate `AUTH_SECRET`.
 
 ## Deployment
 
@@ -115,8 +115,8 @@ Any Next.js-compatible host works. **Required env vars in production:**
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `SUPABASE_SERVICE_ROLE_KEY`
 - `AUTH_SECRET`
-- `AUTH_PASSWORD` (or the equivalent login secret used by `src/app/api/auth`)
-- `NEXTAUTH_URL` / `NEXT_PUBLIC_APP_URL` set to the production domain
+- `OWNER_APP_PIN`
+- `NEXT_PUBLIC_APP_URL` set to the production domain
 
 Run the same SQL in the production Supabase project. Create the same storage bucket + policy.
 
@@ -124,8 +124,9 @@ Run the same SQL in the production Supabase project. Create the same storage buc
 
 | Symptom | Likely cause |
 |---|---|
-| Every request redirects to `/login` with no way through | `AUTH_SECRET` is missing or the login password env var isn't set |
-| API returns `401 Unauthorized` | Same as above, or the auth cookie expired |
+| Every request redirects to `/login` with no way through | `AUTH_SECRET` or `OWNER_APP_PIN` is missing |
+| `/login` rejects a correct-looking PIN | `OWNER_APP_PIN` must be exactly 4 digits |
+| API returns `401 Unauthorized` | `AUTH_SECRET` missing, or the auth cookie expired (30-day lifetime) |
 | `Invalid path specified in request URL` from Supabase | `NEXT_PUBLIC_SUPABASE_URL` has a trailing `/rest/v1/` — remove it |
 | Attachment upload 500s | `repair-order-attachments` storage bucket doesn't exist, or storage policy missing |
 | Appointments don't appear on the calendar after creating a RO | The RO has no `estimated_completion` or `scheduled_drop_off` — calendar only syncs when at least one is set |
