@@ -75,7 +75,6 @@ export default function RepairOrderDetailPage({
   const deleteAttachment = useDeleteAttachment(id);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [isEditing, setIsEditing] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [showSendEstimate, setShowSendEstimate] = useState(false);
 
@@ -110,11 +109,13 @@ export default function RepairOrderDetailPage({
   const vehicleVin = vehicleQ.data?.data?.vin || '';
   const vehicleLicensePlate = vehicleQ.data?.data?.license_plate || '';
 
+  // Sync vehicle fields when the underlying vehicle record loads or changes vehicle_id.
+  // Keyed on vehicle_id so background refetches don't clobber in-flight user edits.
   useEffect(() => {
-    if (isEditing) return;
     setVin(vehicleVin);
     setLicensePlate(vehicleLicensePlate);
-  }, [isEditing, vehicleLicensePlate, vehicleVin]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data?.vehicle_id]);
 
   const handleFileSelect = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
@@ -151,21 +152,6 @@ export default function RepairOrderDetailPage({
     } catch (err) {
       console.error('Failed to delete attachment:', err);
     }
-  };
-
-  const onCancel = () => {
-    if (data) {
-      setStatus(data.status);
-      setServiceType(data.service_type || '');
-      setJobDescription(data.job_description || '');
-      setNote(data.note || '');
-      setEstimatedTotal(data.estimated_total !== undefined ? String(data.estimated_total) : '');
-      setFinalChargeTotal(data.final_charge_total !== undefined ? String(data.final_charge_total) : '');
-      setEstimatedCompletion(isoToDatetimeLocal(data.estimated_completion || ''));
-    }
-    setVin(vehicleVin);
-    setLicensePlate(vehicleLicensePlate);
-    setIsEditing(false);
   };
 
   const onSave = async () => {
@@ -210,7 +196,6 @@ export default function RepairOrderDetailPage({
       estimated_completion: datetimeLocalToIso(estimatedCompletion) || undefined,
       scheduled_drop_off: datetimeLocalToIso(scheduledDropOff) || undefined,
     });
-    setIsEditing(false);
   };
 
   const handleDelete = () => {
@@ -277,7 +262,7 @@ export default function RepairOrderDetailPage({
 
         <div className="flex flex-col gap-2 sm:items-end">
           <div className="flex gap-2">
-            {!isEditing && customerQ.data?.data?.phone && (
+            {customerQ.data?.data?.phone && (
               <button
                 className="rounded-full border border-[#d7b73f]/30 bg-[#d7b73f]/10 px-4 py-2 text-sm font-semibold text-[#d7b73f] hover:border-[#d7b73f]/50 hover:bg-[#d7b73f]/20"
                 onClick={() => setShowSendEstimate(true)}
@@ -288,23 +273,13 @@ export default function RepairOrderDetailPage({
               </button>
             )}
             <button
-              className="rounded-full bg-[#d7b73f] px-4 py-2 text-sm font-semibold text-black hover:bg-[#d7b73f]/90"
-              onClick={() => (isEditing ? onCancel() : setIsEditing(true))}
+              className="rounded-full bg-[#d7b73f] px-4 py-2 text-sm font-semibold text-black hover:bg-[#d7b73f]/90 disabled:opacity-50"
+              onClick={onSave}
               type="button"
-              disabled={!data}
+              disabled={!data || !canSave || update.isPending}
             >
-              {isEditing ? 'Cancel' : 'Edit'}
+              {update.isPending ? 'Saving…' : 'Save'}
             </button>
-            {isEditing ? (
-              <button
-                className="rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-white hover:bg-white/15 disabled:opacity-50"
-                onClick={onSave}
-                type="button"
-                disabled={!canSave || update.isPending}
-              >
-                {update.isPending ? 'Saving…' : 'Save'}
-              </button>
-            ) : null}
           </div>
         </div>
       </div>
@@ -323,10 +298,9 @@ export default function RepairOrderDetailPage({
                 Status
               </div>
               <select
-                className="mt-1 w-full rounded-full border border-white/10 bg-black/30 px-4 py-2 text-sm text-slate-100 outline-none disabled:opacity-50"
+                className="mt-1 w-full rounded-full border border-white/10 bg-black/30 px-4 py-2 text-sm text-slate-100 outline-none focus:border-[#d7b73f]/50"
                 value={status}
                 onChange={(e) => setStatus(e.target.value as RepairOrderStatus)}
-                disabled={!isEditing}
               >
                 {getStatusOptions(status).map((s) => (
                   <option key={s} value={s} disabled={s === 'New'}>
@@ -340,10 +314,9 @@ export default function RepairOrderDetailPage({
                 Service type
               </div>
               <input
-                className="mt-1 w-full rounded-full border border-white/10 bg-black/30 px-4 py-2 text-sm text-slate-100 outline-none disabled:opacity-50"
+                className="mt-1 w-full rounded-full border border-white/10 bg-black/30 px-4 py-2 text-sm text-slate-100 outline-none focus:border-[#d7b73f]/50"
                 value={serviceType}
                 onChange={(e) => setServiceType(e.target.value)}
-                readOnly={!isEditing}
               />
               <div className="mt-1 text-xs text-slate-400">Vehicle ID: {data.vehicle_id}</div>
             </div>
@@ -354,14 +327,10 @@ export default function RepairOrderDetailPage({
               Job description
             </div>
             <textarea
-              className={
-                'mt-1 w-full rounded-xl border border-white/10 bg-black/30 p-3 text-sm text-slate-100 outline-none ' +
-                (isEditing ? 'focus:border-[#d7b73f]/50' : 'opacity-90')
-              }
+              className="mt-1 w-full rounded-xl border border-white/10 bg-black/30 p-3 text-sm text-slate-100 outline-none focus:border-[#d7b73f]/50"
               rows={6}
               value={jobDescription}
               onChange={(e) => setJobDescription(e.target.value)}
-              readOnly={!isEditing}
             />
           </div>
 
@@ -370,14 +339,10 @@ export default function RepairOrderDetailPage({
               Note
             </div>
             <textarea
-              className={
-                'mt-1 w-full rounded-xl border border-white/10 bg-black/30 p-3 text-sm text-slate-100 outline-none ' +
-                (isEditing ? 'focus:border-[#d7b73f]/50' : 'opacity-90')
-              }
+              className="mt-1 w-full rounded-xl border border-white/10 bg-black/30 p-3 text-sm text-slate-100 outline-none focus:border-[#d7b73f]/50"
               rows={3}
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              readOnly={!isEditing}
             />
           </div>
 
@@ -387,13 +352,12 @@ export default function RepairOrderDetailPage({
                 Estimated Total
               </div>
               <input
-                className="mt-1 w-full rounded-full border border-white/10 bg-black/30 px-4 py-2 text-sm text-slate-100 outline-none disabled:opacity-50"
+                className="mt-1 w-full rounded-full border border-white/10 bg-black/30 px-4 py-2 text-sm text-slate-100 outline-none focus:border-[#d7b73f]/50"
                 type="number"
                 step="0.01"
                 min="0"
                 value={estimatedTotal}
                 onChange={(e) => setEstimatedTotal(e.target.value)}
-                readOnly={!isEditing}
               />
             </div>
             <div>
@@ -401,13 +365,12 @@ export default function RepairOrderDetailPage({
                 Final Charge Total
               </div>
               <input
-                className="mt-1 w-full rounded-full border border-white/10 bg-black/30 px-4 py-2 text-sm text-slate-100 outline-none disabled:opacity-50"
+                className="mt-1 w-full rounded-full border border-white/10 bg-black/30 px-4 py-2 text-sm text-slate-100 outline-none focus:border-[#d7b73f]/50"
                 type="number"
                 step="0.01"
                 min="0"
                 value={finalChargeTotal}
                 onChange={(e) => setFinalChargeTotal(e.target.value)}
-                readOnly={!isEditing}
               />
             </div>
           </div>
@@ -417,13 +380,11 @@ export default function RepairOrderDetailPage({
               label="Scheduled Drop Off"
               value={scheduledDropOff}
               onChange={setScheduledDropOff}
-              disabled={!isEditing}
             />
             <DateTimePicker
               label="Estimated Completion"
               value={estimatedCompletion}
               onChange={setEstimatedCompletion}
-              disabled={!isEditing}
             />
           </div>
 
@@ -433,10 +394,9 @@ export default function RepairOrderDetailPage({
                 VIN
               </div>
               <input
-                className="mt-1 w-full rounded-full border border-white/10 bg-black/30 px-4 py-2 text-sm text-slate-100 outline-none disabled:opacity-50"
+                className="mt-1 w-full rounded-full border border-white/10 bg-black/30 px-4 py-2 text-sm text-slate-100 outline-none focus:border-[#d7b73f]/50"
                 value={vin}
                 onChange={(e) => setVin(e.target.value)}
-                readOnly={!isEditing}
                 placeholder={vehicleQ.isLoading ? 'Loading…' : '—'}
               />
               {checkInVin.isError ? <div className="mt-2 text-sm text-red-200">Failed to save VIN</div> : null}
@@ -446,10 +406,9 @@ export default function RepairOrderDetailPage({
                 License plate
               </div>
               <input
-                className="mt-1 w-full rounded-full border border-white/10 bg-black/30 px-4 py-2 text-sm text-slate-100 outline-none disabled:opacity-50"
+                className="mt-1 w-full rounded-full border border-white/10 bg-black/30 px-4 py-2 text-sm text-slate-100 outline-none focus:border-[#d7b73f]/50"
                 value={licensePlate}
                 onChange={(e) => setLicensePlate(e.target.value)}
-                readOnly={!isEditing}
                 placeholder={vehicleQ.isLoading ? 'Loading…' : '—'}
               />
             </div>
