@@ -1,5 +1,5 @@
 import GlobalSearch from '@/components/global-search';
-import AppointmentCalendar from '@/components/appointment-calendar';
+import CollapsibleCalendar from '@/components/collapsible-calendar';
 import ServiceStats from '@/components/service-stats';
 import RecentActiveRepairOrders from '@/components/recent-active-repair-orders';
 
@@ -49,10 +49,8 @@ export default function HomePage() {
       {/* Service Statistics */}
       <ServiceStats />
 
-      {/* Appointment Calendar */}
-      <div className="mt-8">
-        <AppointmentCalendar />
-      </div>
+      {/* Appointment Calendar (collapsible) */}
+      <CollapsibleCalendar />
     </div>
   );
 }
