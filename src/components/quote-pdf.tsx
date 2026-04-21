@@ -152,10 +152,12 @@ export const QuotePDF = ({ lineItems, settings, repairOrderId, customerName, veh
       <Page size="LETTER" style={styles.page}>
         {/* Header */}
         <View style={styles.header}>
-          <Image
-            src={`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3001'}/logo.png`}
-            style={styles.logo}
-          />
+          {settings?.company_info?.logo_url ? (
+            <Image src={settings.company_info.logo_url} style={styles.logo} />
+          ) : null}
+          {settings?.company_info?.name && (
+            <Text style={styles.companyName}>{settings.company_info.name}</Text>
+          )}
           {settings?.company_info?.address && (
             <Text style={styles.companyInfo}>{settings.company_info.address}</Text>
           )}
@@ -304,13 +306,27 @@ export const QuotePDF = ({ lineItems, settings, repairOrderId, customerName, veh
 
         {/* Footer */}
         <View style={styles.footer}>
-          <Text style={{ fontWeight: 'bold', fontSize: 9, marginBottom: 3 }}>Magnum & Auto</Text>
-          <Text>8367 Belding Rd NE, Rockford, MI 49341  |  (616) 874-9050</Text>
-          <Text style={{ marginTop: 4 }}>This estimate is valid until {validUntilStr}. Prices and availability subject to change.</Text>
-          <Text style={{ marginTop: 2 }}>The final cost of repairs may not exceed the estimate by more than $50 or 10%, whichever is less, unless the customer authorizes it.</Text>
-          <Text style={{ marginTop: 3 }}>
-            Thank you for choosing Magnum & Auto!
+          {settings?.company_info?.name && (
+            <Text style={{ fontWeight: 'bold', fontSize: 9, marginBottom: 3 }}>
+              {settings.company_info.name}
+            </Text>
+          )}
+          <Text>
+            {[settings?.company_info?.address, settings?.company_info?.phone]
+              .filter(Boolean)
+              .join('  |  ')}
           </Text>
+          <Text style={{ marginTop: 4 }}>
+            This estimate is valid until {validUntilStr}. Prices and availability subject to change.
+          </Text>
+          <Text style={{ marginTop: 2 }}>
+            The final cost of repairs may not exceed the estimate by more than $50 or 10%, whichever is less, unless the customer authorizes it.
+          </Text>
+          {settings?.company_info?.name && (
+            <Text style={{ marginTop: 3 }}>
+              Thank you for choosing {settings.company_info.name}!
+            </Text>
+          )}
         </View>
       </Page>
     </Document>
