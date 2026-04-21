@@ -51,14 +51,6 @@ export type ActiveRepairOrderItem = {
   customer: Customer | null;
 };
 
-export type ZohoApiResponse<T> = {
-  data: T[];
-  info: {
-    count: number;
-    more_records: boolean;
-  };
-};
-
 export type ApiResponse<T> = {
   data?: T;
   error?: string;

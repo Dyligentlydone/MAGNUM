@@ -1,6 +1,6 @@
 -- =====================================================
 -- MAGNUM - Supabase CRM Schema
--- Migration from Zoho CRM to Supabase
+-- Migration from CRM to Supabase
 -- =====================================================
 
 -- Drop existing tables if they exist (for clean migration)
@@ -15,7 +15,7 @@ DROP TYPE IF EXISTS repair_order_status CASCADE;
 -- =====================================================
 CREATE TABLE customers (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  zoho_id TEXT UNIQUE, -- Preserve Zoho ID for migration tracking
+  external_id TEXT UNIQUE, -- Preserve ID for migration tracking
   first_name TEXT NOT NULL DEFAULT '',
   last_name TEXT NOT NULL DEFAULT '',
   phone TEXT NOT NULL,
@@ -29,7 +29,7 @@ CREATE TABLE customers (
 -- Indexes for performance
 CREATE INDEX idx_customers_phone ON customers(phone);
 CREATE INDEX idx_customers_email ON customers(email) WHERE email IS NOT NULL;
-CREATE INDEX idx_customers_zoho_id ON customers(zoho_id) WHERE zoho_id IS NOT NULL;
+CREATE INDEX idx_customers_external_id ON customers(external_id) WHERE external_id IS NOT NULL;
 CREATE INDEX idx_customers_created_at ON customers(created_at DESC);
 
 -- Full-text search index
@@ -43,8 +43,8 @@ CREATE INDEX idx_customers_search ON customers USING gin(
 );
 
 -- Comments
-COMMENT ON TABLE customers IS 'Customer contact information migrated from Zoho CRM Contacts module';
-COMMENT ON COLUMN customers.zoho_id IS 'Original Zoho CRM Contact ID for migration tracking';
+COMMENT ON TABLE customers IS 'Customer contact information migrated from CRM Contacts module';
+COMMENT ON COLUMN customers.external_id IS 'Original CRM Contact ID for migration tracking';
 COMMENT ON COLUMN customers.phone IS 'Primary phone number (10 digits, no formatting)';
 COMMENT ON COLUMN customers.preferred_contact_method IS 'Preferred way to contact customer';
 COMMENT ON COLUMN customers.description IS 'Additional notes about the customer';
@@ -54,7 +54,7 @@ COMMENT ON COLUMN customers.description IS 'Additional notes about the customer'
 -- =====================================================
 CREATE TABLE vehicles (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  zoho_id TEXT UNIQUE,
+  external_id TEXT UNIQUE,
   customer_id UUID REFERENCES customers(id) ON DELETE SET NULL,
   year TEXT NOT NULL DEFAULT '',
   make TEXT NOT NULL DEFAULT '',
@@ -72,7 +72,7 @@ CREATE TABLE vehicles (
 CREATE INDEX idx_vehicles_customer_id ON vehicles(customer_id);
 CREATE INDEX idx_vehicles_vin ON vehicles(vin) WHERE vin IS NOT NULL;
 CREATE INDEX idx_vehicles_license_plate ON vehicles(license_plate) WHERE license_plate IS NOT NULL;
-CREATE INDEX idx_vehicles_zoho_id ON vehicles(zoho_id) WHERE zoho_id IS NOT NULL;
+CREATE INDEX idx_vehicles_external_id ON vehicles(external_id) WHERE external_id IS NOT NULL;
 CREATE INDEX idx_vehicles_created_at ON vehicles(created_at DESC);
 
 -- Full-text search index
@@ -87,10 +87,10 @@ CREATE INDEX idx_vehicles_search ON vehicles USING gin(
 );
 
 -- Comments
-COMMENT ON TABLE vehicles IS 'Vehicle information migrated from Zoho CRM Vehicles module';
-COMMENT ON COLUMN vehicles.zoho_id IS 'Original Zoho CRM Vehicle ID for migration tracking';
+COMMENT ON TABLE vehicles IS 'Vehicle information migrated from CRM Vehicles module';
+COMMENT ON COLUMN vehicles.external_id IS 'Original CRM Vehicle ID for migration tracking';
 COMMENT ON COLUMN vehicles.customer_id IS 'Vehicle owner (references customers table)';
-COMMENT ON COLUMN vehicles.year IS 'Vehicle year (stored as text to match Zoho)';
+COMMENT ON COLUMN vehicles.year IS 'Vehicle year (stored as text to match legacy)';
 COMMENT ON COLUMN vehicles.vin IS 'Vehicle Identification Number';
 COMMENT ON COLUMN vehicles.license_plate IS 'License plate number';
 
@@ -113,7 +113,7 @@ CREATE TYPE repair_order_status AS ENUM (
 
 CREATE TABLE repair_orders (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  zoho_id TEXT UNIQUE,
+  external_id TEXT UNIQUE,
   vehicle_id UUID REFERENCES vehicles(id) ON DELETE SET NULL,
   customer_id UUID REFERENCES customers(id) ON DELETE SET NULL,
   status repair_order_status NOT NULL DEFAULT 'New',
@@ -135,7 +135,7 @@ CREATE INDEX idx_repair_orders_status ON repair_orders(status);
 CREATE INDEX idx_repair_orders_created_at ON repair_orders(created_at DESC);
 CREATE INDEX idx_repair_orders_updated_at ON repair_orders(updated_at DESC);
 CREATE INDEX idx_repair_orders_estimated_completion ON repair_orders(estimated_completion) WHERE estimated_completion IS NOT NULL;
-CREATE INDEX idx_repair_orders_zoho_id ON repair_orders(zoho_id) WHERE zoho_id IS NOT NULL;
+CREATE INDEX idx_repair_orders_external_id ON repair_orders(external_id) WHERE external_id IS NOT NULL;
 
 -- Full-text search index
 CREATE INDEX idx_repair_orders_search ON repair_orders USING gin(
@@ -147,8 +147,8 @@ CREATE INDEX idx_repair_orders_search ON repair_orders USING gin(
 );
 
 -- Comments
-COMMENT ON TABLE repair_orders IS 'Repair orders migrated from Zoho CRM Repair_Orders module';
-COMMENT ON COLUMN repair_orders.zoho_id IS 'Original Zoho CRM Repair Order ID for migration tracking';
+COMMENT ON TABLE repair_orders IS 'Repair orders migrated from CRM Repair_Orders module';
+COMMENT ON COLUMN repair_orders.external_id IS 'Original CRM Repair Order ID for migration tracking';
 COMMENT ON COLUMN repair_orders.vehicle_id IS 'Vehicle being repaired';
 COMMENT ON COLUMN repair_orders.customer_id IS 'Customer who owns the vehicle';
 COMMENT ON COLUMN repair_orders.service_type IS 'Type of service (e.g., Oil Change, Brake Repair)';
@@ -164,7 +164,7 @@ COMMENT ON COLUMN repair_orders.scheduled_drop_off IS 'When the customer is sche
 -- =====================================================
 CREATE TABLE repair_order_attachments (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  zoho_id TEXT UNIQUE,
+  external_id TEXT UNIQUE,
   repair_order_id UUID NOT NULL REFERENCES repair_orders(id) ON DELETE CASCADE,
   file_name TEXT NOT NULL,
   file_path TEXT NOT NULL, -- Path in Supabase Storage
@@ -175,12 +175,12 @@ CREATE TABLE repair_order_attachments (
 
 -- Indexes for performance
 CREATE INDEX idx_attachments_repair_order_id ON repair_order_attachments(repair_order_id);
-CREATE INDEX idx_attachments_zoho_id ON repair_order_attachments(zoho_id) WHERE zoho_id IS NOT NULL;
+CREATE INDEX idx_attachments_external_id ON repair_order_attachments(external_id) WHERE external_id IS NOT NULL;
 CREATE INDEX idx_attachments_created_at ON repair_order_attachments(created_at DESC);
 
 -- Comments
 COMMENT ON TABLE repair_order_attachments IS 'Photos and files attached to repair orders';
-COMMENT ON COLUMN repair_order_attachments.zoho_id IS 'Original Zoho attachment ID for migration tracking';
+COMMENT ON COLUMN repair_order_attachments.external_id IS 'Original attachment ID for migration tracking';
 COMMENT ON COLUMN repair_order_attachments.file_path IS 'Path in Supabase Storage bucket (repair-order-attachments)';
 COMMENT ON COLUMN repair_order_attachments.file_size IS 'File size in bytes';
 
@@ -374,16 +374,16 @@ $$ LANGUAGE plpgsql;
 CREATE TABLE IF NOT EXISTS migration_log (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   migration_type TEXT NOT NULL, -- 'customers', 'vehicles', 'repair_orders', 'attachments'
-  zoho_id TEXT NOT NULL,
+  external_id TEXT NOT NULL,
   supabase_id UUID NOT NULL,
   migrated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   notes TEXT
 );
 
 CREATE INDEX idx_migration_log_type ON migration_log(migration_type);
-CREATE INDEX idx_migration_log_zoho_id ON migration_log(zoho_id);
+CREATE INDEX idx_migration_log_external_id ON migration_log(external_id);
 
-COMMENT ON TABLE migration_log IS 'Tracks which Zoho records have been migrated to Supabase';
+COMMENT ON TABLE migration_log IS 'Tracks which records have been migrated to Supabase';
 
 -- =====================================================
 -- VERIFICATION QUERIES
@@ -412,4 +412,4 @@ COMMENT ON TABLE migration_log IS 'Tracks which Zoho records have been migrated 
 -- Schema creation complete. Next steps:
 -- 1. Run this SQL in your Supabase project
 -- 2. Create storage bucket 'repair-order-attachments' in Supabase Dashboard
--- 3. Run migration scripts to import data from Zoho
+-- 3. Run migration scripts to import data from CRM

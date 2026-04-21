@@ -41,18 +41,8 @@ export const useCreateLineItem = () => {
     mutationFn: async (data: LineItemInput) => {
       return await apiClient.post<{ data: LineItem }>('/api/line-items', data);
     },
-    onSuccess: async (_, variables) => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['line-items', variables.repair_order_id] });
-      
-      // Sync to Zoho (silent failure)
-      try {
-        await apiClient.post('/api/line-items/sync-to-zoho', {
-          repair_order_id: variables.repair_order_id,
-        });
-      } catch (error) {
-        // Silent failure
-        console.error('Zoho sync failed:', error);
-      }
     },
   });
 };
@@ -64,18 +54,8 @@ export const useUpdateLineItem = () => {
     mutationFn: async ({ id, repairOrderId, ...data }: Partial<LineItem> & { id: string; repairOrderId: string }) => {
       return await apiClient.patch<{ data: LineItem }>(`/api/line-items/${id}`, data);
     },
-    onSuccess: async (_, variables) => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['line-items', variables.repairOrderId] });
-      
-      // Sync to Zoho (silent failure)
-      try {
-        await apiClient.post('/api/line-items/sync-to-zoho', {
-          repair_order_id: variables.repairOrderId,
-        });
-      } catch (error) {
-        // Silent failure
-        console.error('Zoho sync failed:', error);
-      }
     },
   });
 };
@@ -87,18 +67,8 @@ export const useDeleteLineItem = () => {
     mutationFn: async ({ id, repairOrderId }: { id: string; repairOrderId: string }) => {
       return await apiClient.delete(`/api/line-items/${id}`);
     },
-    onSuccess: async (_, variables) => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['line-items', variables.repairOrderId] });
-      
-      // Sync to Zoho (silent failure)
-      try {
-        await apiClient.post('/api/line-items/sync-to-zoho', {
-          repair_order_id: variables.repairOrderId,
-        });
-      } catch (error) {
-        // Silent failure
-        console.error('Zoho sync failed:', error);
-      }
     },
   });
 };

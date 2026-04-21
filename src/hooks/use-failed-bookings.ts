@@ -15,7 +15,7 @@ type FailedBooking = {
   vin: string | null;
   service_type: string | null;
   job_description: string | null;
-  zoho_error: string | null;
+  sync_error: string | null;
 };
 
 export type FailedBookingsResponse = {

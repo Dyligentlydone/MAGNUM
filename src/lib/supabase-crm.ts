@@ -1,6 +1,5 @@
 /**
  * Supabase CRM Helper Functions
- * Mirrors Zoho CRM functions but uses Supabase
  */
 
 import { createClient } from '@supabase/supabase-js';
@@ -74,7 +73,7 @@ export async function syncRepairOrderToAppointments(repairOrderId: string): Prom
         service_type: ro.service_type,
         scheduled_datetime: ro.estimated_completion,
         status: appointmentStatus,
-        zoho_status: ro.status,
+        ro_status: ro.status,
         appointment_type: 'estimated_completion',
       }, {
         onConflict: 'repair_order_id,appointment_type',
@@ -100,7 +99,7 @@ export async function syncRepairOrderToAppointments(repairOrderId: string): Prom
         service_type: ro.service_type,
         scheduled_datetime: ro.scheduled_drop_off,
         status: 'scheduled', // Drop-offs are always scheduled
-        zoho_status: ro.status,
+        ro_status: ro.status,
         appointment_type: 'scheduled_drop_off',
       }, {
         onConflict: 'repair_order_id,appointment_type',

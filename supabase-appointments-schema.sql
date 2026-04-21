@@ -3,7 +3,7 @@
 
 CREATE TABLE IF NOT EXISTS appointments (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  repair_order_id TEXT NOT NULL UNIQUE,  -- Zoho repair order ID (one appointment per RO)
+  repair_order_id TEXT NOT NULL UNIQUE,  -- repair order ID (one appointment per RO)
   customer_name TEXT,
   customer_phone TEXT,
   vehicle_display TEXT,
@@ -47,4 +47,4 @@ CREATE TRIGGER appointments_updated_at
   EXECUTE FUNCTION update_appointments_updated_at();
 
 -- Add comment for documentation
-COMMENT ON TABLE appointments IS 'Appointment scheduling synced with Zoho repair orders estimated_completion field';
+COMMENT ON TABLE appointments IS 'Appointment scheduling synced with repair orders estimated_completion field';

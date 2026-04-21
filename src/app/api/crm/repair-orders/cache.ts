@@ -1,7 +1,7 @@
 // Server-side cache for repair orders to reduce database calls
 const cache = new Map<string, { payload: any; at: number }>();
 
-const CACHE_TTL_MS = 10_000; // 10 seconds - Supabase is much faster than Zoho API, so we can refresh more often
+const CACHE_TTL_MS = 10_000; // 10 seconds - Supabase is much faster than Supabase API, so we can refresh more often
 const MAX_ENTRIES = 20; // Prevent unbounded growth
 
 export const getCache = (cacheKey: string) => {
