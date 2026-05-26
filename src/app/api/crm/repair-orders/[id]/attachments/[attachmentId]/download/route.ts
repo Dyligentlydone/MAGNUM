@@ -22,7 +22,7 @@ export const GET = async (
 
     // Download from Supabase Storage
     const { data: fileData, error } = await supabase.storage
-      .from('repair-order-attachments')
+      .from('Repair Order Attachments')
       .download(attachment.file_path);
 
     if (error) throw error;

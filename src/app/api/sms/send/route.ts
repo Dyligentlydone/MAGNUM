@@ -18,7 +18,7 @@ const resolvePhotoUrls = async (repairOrderId: string): Promise<string[]> => {
   const publicUrls: string[] = [];
   for (const att of attachments) {
     const { data: signedData } = await supabase.storage
-      .from('repair-order-attachments')
+      .from('Repair Order Attachments')
       .createSignedUrl(att.file_path, 3600); // 1 hour expiry
 
     if (signedData?.signedUrl) {

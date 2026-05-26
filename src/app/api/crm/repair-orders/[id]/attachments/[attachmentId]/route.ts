@@ -19,7 +19,7 @@ export const DELETE = async (
     if (attachment?.file_path) {
       // Delete from storage
       await supabase.storage
-        .from('repair-order-attachments')
+        .from('Repair Order Attachments')
         .remove([attachment.file_path]);
     }
 

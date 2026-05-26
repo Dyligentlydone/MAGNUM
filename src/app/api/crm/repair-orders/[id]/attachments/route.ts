@@ -77,7 +77,7 @@ export const POST = async (
     const fileName = `${id}/${Date.now()}-${safeName}`;
 
     const { data: uploadData, error: uploadError } = await supabase.storage
-      .from('repair-order-attachments')
+      .from('Repair Order Attachments')
       .upload(fileName, fileBuffer, {
         contentType: file.type,
         upsert: false,
